@@ -1,0 +1,44 @@
+{
+  "Version": "0.0.1",
+  "Processes" : [
+    {
+      "Id": "gmeth",
+      "Dependencies": [],
+      "Dir": "./bin",
+      "Source": "",
+      "Version": "",
+      "Command": "./peer.sh",
+      "Arguments": [],
+      "LogFilename": "gmeth.log",
+      "WaitForCompletion": false,
+      "WaitTime": 3,
+      "PidFilename": "gmeth.pid"
+    },
+    {
+      "Id": "middleware",
+      "Dependencies": ["gmeth"],
+      "Dir": "./bin",
+      "Source": "",
+      "Version": "",
+      "Command": "./middleware",
+      "Arguments": [],
+      "LogFilename": "middleware.log",
+      "WaitForCompletion": false,
+      "WaitTime": 1,
+      "PidFilename": "middleware.pid"
+    },
+    {
+      "Id": "marconid",
+      "Dependencies": ["gmeth", "middleware"],
+      "Dir": "./bin",
+      "Source": "",
+      "Version": "",
+      "Command": "./marconid",
+      "Arguments": ["/opt/marconi/etc/marconid/l2.key", "/opt/marconi/etc/marconid/block/basebeacon_cluster1"],
+      "LogFilename": "marconid.log",
+      "WaitForCompletion": false,
+      "WaitTime": 1,
+      "PidFilename": "marconid.pid"
+    }
+  ]
+}

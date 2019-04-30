@@ -1,0 +1,24 @@
+{
+  "Version": "0.0.1",
+  "Packages" : [
+    {
+      "Id": "gmeth",
+      "Dir": "./meth",
+      "Source": "https://d1nia9qbq006oz.cloudfront.net/deployment/components/meth/0.1.582/geth.tar.gz.enc",
+      "Version": "0.1.582"
+    },
+    {
+      "Id": "middleware",
+      "Dir": "./marconi_middleware",
+      "Source": "https://d1nia9qbq006oz.cloudfront.net/deployment/components/middleware/0.1.156/marconi_middleware.tar.gz.enc",
+      "Version": "0.1.156"
+    },
+    {
+      "Id": "marconid",
+      "Dir": "/",
+      "Source": "https://d1nia9qbq006oz.cloudfront.net/deployment/components/marconid/0.1.708/marconid_linux.tar.gz.enc",
+      "Version": "0.1.708",
+      "VersionFile": "/opt/marconi/etc/marconid/version.txt"
+    }
+  ]
+}
