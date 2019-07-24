@@ -1,7 +1,7 @@
 package util
 
 import (
-  "gitlab.neji.vm.tc/marconi/go-prompt"
+  "github.com/MarconiProtocol/go-prompt"
   "golang.org/x/crypto/sha3"
 
   "fmt"

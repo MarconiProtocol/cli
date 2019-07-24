@@ -2,10 +2,10 @@ package modes
 
 import (
   "fmt"
-  "gitlab.neji.vm.tc/marconi/go-prompt"
-  "gitlab.neji.vm.tc/marconi/cli/console/context"
-  "gitlab.neji.vm.tc/marconi/cli/console/util"
-  "gitlab.neji.vm.tc/marconi/cli/console/mode_interface"
+  "github.com/MarconiProtocol/go-prompt"
+  "github.com/MarconiProtocol/cli/console/context"
+  "github.com/MarconiProtocol/cli/console/util"
+  "github.com/MarconiProtocol/cli/console/mode_interface"
   "strings"
 )
 

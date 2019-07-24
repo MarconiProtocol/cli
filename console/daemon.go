@@ -1,8 +1,8 @@
 package console
 
 import (
-  "gitlab.neji.vm.tc/marconi/cli/console/modes/process"
-  "gitlab.neji.vm.tc/marconi/cli/console/mode_interface"
+  "github.com/MarconiProtocol/cli/console/modes/process"
+  "github.com/MarconiProtocol/cli/console/mode_interface"
 )
 
 /*

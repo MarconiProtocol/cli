@@ -2,7 +2,7 @@ package packages
 
 import (
   "fmt"
-  "gitlab.neji.vm.tc/marconi/cli/core/configs"
+  "github.com/MarconiProtocol/cli/core/configs"
   "sync"
 )
 

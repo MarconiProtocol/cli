@@ -3,7 +3,7 @@ package packages
 import (
   "bufio"
   "fmt"
-  "gitlab.neji.vm.tc/marconi/cli/core/configs"
+  "github.com/MarconiProtocol/cli/core/configs"
   "os"
   "path/filepath"
   "strings"

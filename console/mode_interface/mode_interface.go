@@ -1,7 +1,7 @@
 package mode_interface
 
 import (
-  "gitlab.neji.vm.tc/marconi/go-prompt"
+  "github.com/MarconiProtocol/go-prompt"
 )
 
 /*

@@ -3,9 +3,9 @@ package context
 import (
   "errors"
   "fmt"
-  "gitlab.neji.vm.tc/marconi/go-prompt"
-  "gitlab.neji.vm.tc/marconi/cli/console/mode_interface"
-  "gitlab.neji.vm.tc/marconi/cli/console/util"
+  "github.com/MarconiProtocol/go-prompt"
+  "github.com/MarconiProtocol/cli/console/mode_interface"
+  "github.com/MarconiProtocol/cli/console/util"
 )
 
 // A context is used by the console for state and initialization

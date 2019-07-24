@@ -2,9 +2,9 @@ package core
 
 import (
   "fmt"
-  "gitlab.neji.vm.tc/marconi/cli/core/configs"
-  "gitlab.neji.vm.tc/marconi/cli/core/packages"
-  "gitlab.neji.vm.tc/marconi/cli/core/processes"
+  "github.com/MarconiProtocol/cli/core/configs"
+  "github.com/MarconiProtocol/cli/core/packages"
+  "github.com/MarconiProtocol/cli/core/processes"
 )
 
 func Bootstrap(baseDir string) {

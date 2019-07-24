@@ -7,7 +7,7 @@ import (
   "strconv"
   "strings"
 
-  "gitlab.neji.vm.tc/marconi/cli/console/util"
+  "github.com/MarconiProtocol/cli/console/util"
 )
 
 // TODO in the future, we should have more validations here

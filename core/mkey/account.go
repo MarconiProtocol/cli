@@ -11,7 +11,7 @@ import (
   "strconv"
   "strings"
 
-  "gitlab.neji.vm.tc/marconi/cli/core/configs"
+  "github.com/MarconiProtocol/cli/core/configs"
 )
 
 const (

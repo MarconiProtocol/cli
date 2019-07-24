@@ -1,9 +1,9 @@
 package root
 
 import (
-  "gitlab.neji.vm.tc/marconi/go-prompt"
-  "gitlab.neji.vm.tc/marconi/cli/console/context"
-  "gitlab.neji.vm.tc/marconi/cli/console/modes"
+  "github.com/MarconiProtocol/go-prompt"
+  "github.com/MarconiProtocol/cli/console/context"
+  "github.com/MarconiProtocol/cli/console/modes"
 )
 
 const (

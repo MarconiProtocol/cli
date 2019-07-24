@@ -4,9 +4,9 @@ import (
   "bytes"
   "encoding/json"
   "fmt"
-  "gitlab.neji.vm.tc/marconi/cli/core/blockchain"
-  "gitlab.neji.vm.tc/marconi/cli/core/configs"
-  "gitlab.neji.vm.tc/marconi/cli/core/mkey"
+  "github.com/MarconiProtocol/cli/core/blockchain"
+  "github.com/MarconiProtocol/cli/core/configs"
+  "github.com/MarconiProtocol/cli/core/mkey"
   "math/big"
   "strconv"
 )

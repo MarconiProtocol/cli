@@ -1,11 +1,11 @@
 package process
 
 import (
-  "gitlab.neji.vm.tc/marconi/go-prompt"
-  "gitlab.neji.vm.tc/marconi/cli/console/context"
-  "gitlab.neji.vm.tc/marconi/cli/console/modes"
-  "gitlab.neji.vm.tc/marconi/cli/console/util"
-  "gitlab.neji.vm.tc/marconi/cli/core/processes"
+  "github.com/MarconiProtocol/go-prompt"
+  "github.com/MarconiProtocol/cli/console/context"
+  "github.com/MarconiProtocol/cli/console/modes"
+  "github.com/MarconiProtocol/cli/console/util"
+  "github.com/MarconiProtocol/cli/core/processes"
   "fmt"
   "strconv"
 )

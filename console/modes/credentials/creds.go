@@ -3,11 +3,11 @@ package credentials
 import (
   "fmt"
 
-  "gitlab.neji.vm.tc/marconi/go-prompt"
-  "gitlab.neji.vm.tc/marconi/cli/api/middleware"
-  "gitlab.neji.vm.tc/marconi/cli/console/context"
-  "gitlab.neji.vm.tc/marconi/cli/console/modes"
-  "gitlab.neji.vm.tc/marconi/cli/console/util"
+  "github.com/MarconiProtocol/go-prompt"
+  "github.com/MarconiProtocol/cli/api/middleware"
+  "github.com/MarconiProtocol/cli/console/context"
+  "github.com/MarconiProtocol/cli/console/modes"
+  "github.com/MarconiProtocol/cli/console/util"
 )
 
 const (

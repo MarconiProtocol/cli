@@ -7,11 +7,11 @@ import (
   "os/signal"
   "syscall"
 
-  "gitlab.neji.vm.tc/marconi/cli/console"
-  "gitlab.neji.vm.tc/marconi/cli/console/modes/process"
-  "gitlab.neji.vm.tc/marconi/cli/core"
-  "gitlab.neji.vm.tc/marconi/cli/core/configs"
-  "gitlab.neji.vm.tc/marconi/cli/core/packages"
+  "github.com/MarconiProtocol/cli/console"
+  "github.com/MarconiProtocol/cli/console/modes/process"
+  "github.com/MarconiProtocol/cli/core"
+  "github.com/MarconiProtocol/cli/core/configs"
+  "github.com/MarconiProtocol/cli/core/packages"
 )
 
 const (

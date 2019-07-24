@@ -2,10 +2,10 @@ package marconi_net
 
 import (
   "fmt"
-  "gitlab.neji.vm.tc/marconi/go-prompt"
-  "gitlab.neji.vm.tc/marconi/cli/api/middleware"
-  "gitlab.neji.vm.tc/marconi/cli/console/modes"
-  "gitlab.neji.vm.tc/marconi/cli/core/mkey"
+  "github.com/MarconiProtocol/go-prompt"
+  "github.com/MarconiProtocol/cli/api/middleware"
+  "github.com/MarconiProtocol/cli/console/modes"
+  "github.com/MarconiProtocol/cli/core/mkey"
   "strings"
 )
 

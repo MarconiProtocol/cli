@@ -2,9 +2,9 @@ package credentials
 
 import (
   "fmt"
-  "gitlab.neji.vm.tc/marconi/go-prompt"
-  "gitlab.neji.vm.tc/marconi/cli/console/modes"
-  "gitlab.neji.vm.tc/marconi/cli/core/mkey"
+  "github.com/MarconiProtocol/go-prompt"
+  "github.com/MarconiProtocol/cli/console/modes"
+  "github.com/MarconiProtocol/cli/core/mkey"
   "strconv"
 )
 

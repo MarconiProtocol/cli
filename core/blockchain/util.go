@@ -3,7 +3,7 @@ package blockchain
 import (
   "gitlab.neji.vm.tc/marconi/go-ethereum/common"
   "gitlab.neji.vm.tc/marconi/go-ethereum/core/types"
-  "gitlab.neji.vm.tc/marconi/cli/core/mkey"
+  "github.com/MarconiProtocol/cli/core/mkey"
   "math/big"
 
   "fmt"
