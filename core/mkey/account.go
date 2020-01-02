@@ -4,14 +4,13 @@ import (
   "encoding/json"
   "errors"
   "fmt"
-  "gitlab.neji.vm.tc/marconi/go-ethereum/accounts/keystore"
+  "github.com/MarconiProtocol/cli/core/configs"
+  "github.com/MarconiProtocol/go-methereum-lite/accounts/keystore"
   "io/ioutil"
   "os"
   "path/filepath"
   "strconv"
   "strings"
-
-  "github.com/MarconiProtocol/cli/core/configs"
 )
 
 const (
@@ -20,6 +19,8 @@ const (
   MARCONI_PRIVATE_KEY_FILENAME = "mpkey"
   MAX_MARCONI_PRIVATE_KEYS     = 16
   MARCONI_KEY_CHILD_DIR        = "/etc/marconid/keys"
+  MARCONI_KEY_FILENAME_SUFFIX  = "_mpkeys"
+  MARCONI_PUBLIC_KEY_FILE_EXT  = ".pub"
 )
 
 /*
@@ -185,11 +186,10 @@ func NewAccount(password string) (*MarconiAccount, error) {
 /*
   Generates a new MarconiKey and adds it to the account
 */
-// TODO: add a limit to the amount of keys we can add
 func (m *MarconiAccount) GenerateMarconiKey(password string) (*EncryptedMarconiKeyJSON, error) {
 
   if len(m.MarconiKeys) >= MAX_MARCONI_PRIVATE_KEYS {
-    return nil, errors.New("Error: Reached maximum number of Marconi Private Keys that can be stored in one account")
+    return nil, errors.New("Max number of Marconi Private Keys that can be stored in one account has been reached")
   }
 
   // Generate and encrypt new Marconi private key
@@ -213,7 +213,7 @@ func (m *MarconiAccount) GenerateMarconiKey(password string) (*EncryptedMarconiK
   Exports MarconiKeys stored in the account to mpkey files in the keystore directory
 */
 func (m *MarconiAccount) ExportMarconiKeys(password string) error {
-  exportDir := filepath.Join(configs.GetFullPath(ACCOUNT_CHILD_DIR), filepath.Base(m.filename)+"_mpkeys")
+  exportDir := filepath.Join(configs.GetFullPath(ACCOUNT_CHILD_DIR), filepath.Base(m.filename)+MARCONI_KEY_FILENAME_SUFFIX)
 
   count := 0
   for idx, encryptedMarconiKey := range m.MarconiKeys {
@@ -227,7 +227,7 @@ func (m *MarconiAccount) ExportMarconiKeys(password string) error {
     }
 
     savePrivateKey(filepath.Join(exportDir, MARCONI_PRIVATE_KEY_FILENAME+strconv.Itoa(idx)), marconiKey)
-    savePublicKey(filepath.Join(exportDir, MARCONI_PRIVATE_KEY_FILENAME+strconv.Itoa(idx)+".pub"), &marconiKey.PublicKey)
+    savePublicKey(filepath.Join(exportDir, MARCONI_PRIVATE_KEY_FILENAME+strconv.Itoa(idx)+MARCONI_PUBLIC_KEY_FILE_EXT), &marconiKey.PublicKey)
 
     count++
   }
@@ -257,8 +257,7 @@ func (m *MarconiAccount) UseMarconiKey(mpkeyId string, password string) error {
     return err
   }
   savePrivateKey(filepath.Join(path, MARCONI_PRIVATE_KEY_FILENAME), marconiKey)
-  savePublicKey(filepath.Join(path, MARCONI_PRIVATE_KEY_FILENAME+".pub"), &marconiKey.PublicKey)
-  //fmt.Println("Marconi Key", mpkeyId, "exported to:", path)
+  savePublicKey(filepath.Join(path, MARCONI_PRIVATE_KEY_FILENAME+MARCONI_PUBLIC_KEY_FILE_EXT), &marconiKey.PublicKey)
   return nil
 }
 

@@ -14,6 +14,7 @@ import (
 const ETH_API_MIDDLEWARE_URL_PATH string = "/api/eth/v1"
 const ETH_API_PERSONAL_URL_PATH string = "/api/personal/v1"
 const MARCONI_API_MIDDLEWARE_URL_PATH string = "/api/marconi/v1"
+const MIDDLEWARE_API_MIDDLEWARE_URL_PATH string = "/api/middleware/v1"
 
 type Client struct {
   host string
@@ -437,7 +438,10 @@ func (c *Client) SendTransaction(password string, nonce uint64, fromAddress stri
   }
 
   var byteBuffer bytes.Buffer
-  signedTransaction.EncodeRLP(&byteBuffer)
+  err = signedTransaction.EncodeRLP(&byteBuffer)
+  if err != nil {
+    return "", err
+  }
   rlpEncodedTransaction := fmt.Sprintf("0x%x", byteBuffer.Bytes())
   params := []string{rlpEncodedTransaction}
   paramsBytes, err := json.Marshal(params)
@@ -511,4 +515,60 @@ func (c *Client) GetTransactionReceipt(transactionHash string) (*Reciept, error)
   }
 
   return &r.Result, nil
+}
+
+/*
+  Let middleware update userAddress in user_conf.json
+*/
+func (c *Client) UpdateUserAddress(userAddress string) (bool, error) {
+  params := []string{
+    userAddress,
+  }
+  paramsBytes, err := json.Marshal(params)
+  if err != nil {
+    return false, err
+  }
+
+  payload := createJsonPayload("updateUserAddress", string(paramsBytes))
+  response, err := sendJsonRpcOverHttp(c.host, c.port, MIDDLEWARE_API_MIDDLEWARE_URL_PATH, payload)
+  if err != nil {
+    return false, err
+  }
+
+  r := JSONRpcResponseBool{}
+  err = json.Unmarshal(response, &r)
+  if err != nil {
+    return false, err
+  }
+
+  return r.Result, nil
+}
+
+/*
+  Call middleware to start netflow monitor
+ */
+func (c *Client) StartNetflow(collectorIp string, collectorPort string, bridgeId string, loggingDirectory string) (error) {
+  params := map[string]string{
+    "collectorIp" : collectorIp,
+    "collectorPort" : collectorPort,
+    "interface" : bridgeId,
+    "loggingDirectory" : loggingDirectory,
+  }
+
+  paramsBytes, err := json.Marshal(params)
+  if err != nil {
+    return err
+  }
+  payload := createJsonPayload("startNetflow", string(paramsBytes))
+  response, err := sendJsonRpcOverHttp(c.host, c.port, MARCONI_API_MIDDLEWARE_URL_PATH, payload)
+  if err != nil {
+    return err
+  }
+  r := JSONRpcResponse{}
+  err = json.Unmarshal(response, &r)
+  if err != nil {
+    return err
+  }
+
+  return nil
 }

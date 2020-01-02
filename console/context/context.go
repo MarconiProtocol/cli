@@ -3,9 +3,9 @@ package context
 import (
   "errors"
   "fmt"
-  "github.com/MarconiProtocol/go-prompt"
   "github.com/MarconiProtocol/cli/console/mode_interface"
   "github.com/MarconiProtocol/cli/console/util"
+  "github.com/MarconiProtocol/go-prompt"
 )
 
 // A context is used by the console for state and initialization

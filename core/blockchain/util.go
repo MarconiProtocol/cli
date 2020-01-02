@@ -1,12 +1,11 @@
 package blockchain
 
 import (
-  "gitlab.neji.vm.tc/marconi/go-ethereum/common"
-  "gitlab.neji.vm.tc/marconi/go-ethereum/core/types"
-  "github.com/MarconiProtocol/cli/core/mkey"
-  "math/big"
-
   "fmt"
+  "github.com/MarconiProtocol/cli/core/mkey"
+  "github.com/MarconiProtocol/go-methereum-lite/common"
+  "github.com/MarconiProtocol/go-methereum-lite/core/types"
+  "math/big"
 )
 
 const (

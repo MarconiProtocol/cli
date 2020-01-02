@@ -8,13 +8,13 @@ import (
 )
 
 func Bootstrap(baseDir string) {
-  fmt.Println("Bootstrapping Marconi Client\n")
+  fmt.Println("Bootstrapping Marconi Client...")
 
   // Load the configs
   packages_config := configs.LoadPackagesConf()
 
   // Check packages
-  packages.Instance().UpdatePackages(baseDir, packages_config.Packages)
+  packages.Instance().UpdatePackages(baseDir, packages_config)
 }
 
 func StartProcessManager(baseDir string) {

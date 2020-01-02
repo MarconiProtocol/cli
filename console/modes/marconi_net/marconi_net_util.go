@@ -1,27 +1,17 @@
 package marconi_net
 
 import (
-  "fmt"
+  "github.com/MarconiProtocol/cli/console/modes/marconi_net/commands"
+  "github.com/MarconiProtocol/cli/console/util"
   "github.com/MarconiProtocol/go-prompt"
-  "github.com/MarconiProtocol/cli/console/modes"
-  "github.com/MarconiProtocol/cli/core/configs"
-  "github.com/MarconiProtocol/cli/core/mkey"
-  "os"
-  "path/filepath"
-  "strings"
-)
-
-const (
-  GENERATE_32BITKEY = "generate_32bitkey"
-  REGISTER          = "register"
-
-  DEFAULT_KEY_CHILD_PATH = "/etc/marconid/"
 )
 
 // Mode suggestions
 var MNET_UTIL_SUGGESTIONS = []prompt.Suggest{
-  {Text: GENERATE_32BITKEY, Description: "Generate a 32 bit key"},
-  {Text: REGISTER, Description: "Register a nodeID"},
+  {Text: marconi_net_commands.GENERATE_32BITKEY, Description: "Generate a 32 bit key"},
+  {Text: marconi_net_commands.GET_MPIPE_PORT, Description: "Get the shared MPipe port"},
+  {Text: marconi_net_commands.REGISTER, Description: "Register a nodeID"},
+  {Text: marconi_net_commands.START_NETFLOW, Description: "Start netflow monitoring"},
 }
 
 func (mnm *MarconiNetMode) getGenerate32BitKeySuggestions(line []string) []prompt.Suggest {
@@ -41,58 +31,57 @@ func (mnm *MarconiNetMode) getRegisterUserSuggestions(line []string) []prompt.Su
   return []prompt.Suggest{}
 }
 
-func (mnm *MarconiNetMode) handleGenerate32BitKey(args []string) {
-  defaultPath := configs.GetFullPath(DEFAULT_KEY_CHILD_PATH)
-  keyfileName := "l2.key"
-  fmt.Println("Generating base64 32bit key.")
-  fmt.Printf("Enter path in which to save the key (%s):\n", defaultPath)
-  path := prompt.Input("", func(document prompt.Document) []prompt.Suggest {
+func (mnm *MarconiNetMode) getGetMpipePortSuggestions(line []string) []prompt.Suggest {
+  switch {
+  case len(line) == 2:
+    return []prompt.Suggest{{Text: "<PEER_NODE_ID>", Description: "NodeID of the first peer"}}
+  case len(line) == 3:
+    return []prompt.Suggest{{Text: "<OTHER_PEER_NODE_ID>", Description: "NodeID of the second peer"}}
+  default:
     return []prompt.Suggest{}
-  })
-  // use a default if nothing was entered
-  path = strings.TrimSpace(path)
-  if path == "" {
-    path = defaultPath
   }
+}
 
-  // check if an existing key exists
-  keyfilePath := filepath.Join(path, keyfileName)
-  if _, err := os.Stat(keyfilePath); !os.IsNotExist(err) {
-    fmt.Println(keyfilePath, "exists. Overwrite?")
-    confirmed := modes.GetConfirmationInput()
-    if !confirmed {
-      fmt.Println("Skipping generation")
-      return
-    }
+func (mnm *MarconiNetMode) getStartNetflowSuggestions(line []string) []prompt.Suggest {
+  switch {
+  case len(line) == 2:
+    return []prompt.Suggest{{Text: "<COLLECTOR_IP>", Description: "IP of the collector to send netflow data to."}}
+  case len(line) == 3:
+    return []prompt.Suggest{{Text: "<COLLECTOR_PORT>", Description: "Port of the collector to send netflow data to."}}
+  case len(line) == 4:
+    return []prompt.Suggest{{Text: "<INTERFACE_ID>", Description: "Interface to monitor."}}
+  case len(line) == 5:
+    return []prompt.Suggest{{Text: "[LOGGING_DIR]", Description: "Optional directory to output local netflow data to."}}
+  default:
+    return []prompt.Suggest{}
   }
-  _, err := mkey.Generate32BitKey(keyfilePath)
-  if err != nil {
-    fmt.Println(err)
-  } else {
-    fmt.Println("Key successfully generated")
-  }
+}
+
+func (mnm *MarconiNetMode) handleGenerate32BitKey(args []string) {
+  util.Logger.Info(marconi_net_commands.UTIL+" "+marconi_net_commands.GENERATE_32BITKEY, util.ArgsToString(args))
+  marconi_net_commands.Generate32BitKey(args)
 }
 
 /*
   Handle the register command
 */
 func (mnm *MarconiNetMode) handleRegisterUser(args []string) {
-  if !mnm.checkMiddlewareRunning() {
-    return
-  }
-  if !modes.ArgsLenCheck(args, 2) {
-    fmt.Println("Usage:", REGISTER, "<NODE_ID>, <MAC_HASH>")
-    return
-  }
-  if !modes.ArgPubKeyHashCheck(args[0]) {
-    return
-  }
+  util.Logger.Info(marconi_net_commands.UTIL+" "+marconi_net_commands.REGISTER, util.ArgsToString(args))
+  marconi_net_commands.Register(args)
+}
 
-  result, err := mnm.middlewareClient.RegisterUser(args[0], args[1])
-  if err != nil {
-    fmt.Println("Error:", err)
-  } else {
-    fmt.Println("Registered a peer to the network:")
-    fmt.Printf("%-24s %48s\n\n", "Registered Peer", mkey.AddPrefixPubKeyHash(result.PubKeyHash))
-  }
+/*
+  Handle the get mpipe port command
+*/
+func (mnm *MarconiNetMode) handleGetMPipePort(args []string) {
+  util.Logger.Info(marconi_net_commands.UTIL+" "+marconi_net_commands.GET_MPIPE_PORT, util.ArgsToString(args))
+  marconi_net_commands.GetMPipePort(args)
+}
+
+/*
+  Handle the start netflow command
+*/
+func (mnm *MarconiNetMode) handleStartNetflow(args []string) {
+  util.Logger.Info(marconi_net_commands.UTIL+" "+marconi_net_commands.START_NETFLOW, util.ArgsToString(args))
+  marconi_net_commands.StartNetflow(args)
 }

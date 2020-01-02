@@ -3,11 +3,15 @@ package packages
 import (
   "archive/tar"
   "compress/gzip"
+  "encoding/json"
+  "errors"
   "fmt"
+  "github.com/MarconiProtocol/cli/core/configs"
   "io"
   "io/ioutil"
   "net/http"
   "os"
+  "os/exec"
   "path/filepath"
   "runtime/debug"
   "strconv"
@@ -16,9 +20,44 @@ import (
 )
 
 /*
+  Download manifest file
+*/
+func downloadManifestWithHttp(source string) (*configs.PackageManifest, error) {
+  for attempts := 1; attempts <= 3; attempts++ {
+    // Make an http request to get the package file
+    request, err := http.NewRequest("GET", source, nil)
+    if err != nil {
+      fmt.Println("Error with GET request:", err, "Retrying...")
+      time.Sleep(3 * time.Second)
+      continue
+    }
+
+    resp, err := http.DefaultClient.Do(request)
+    if err != nil {
+      fmt.Println("Error with sending http request:", err, "Retrying...")
+      time.Sleep(3 * time.Second)
+      continue
+    }
+    defer resp.Body.Close()
+    if resp.StatusCode != 200 {
+      fmt.Println("Http response status:", resp.Status)
+    }
+
+    bytes, err := ioutil.ReadAll(resp.Body)
+    manifest := configs.PackageManifest{}
+    err = json.Unmarshal(bytes, &manifest)
+    if err != nil {
+      return nil, errors.New(fmt.Sprintf("Failed to download manifest file: %s  - Err: %s", source, err))
+    }
+    return &manifest, nil
+  }
+  return nil, errors.New(fmt.Sprintf("Maximum retry limit reached. Failed to download file: %s Exiting.", source))
+}
+
+/*
   Downloads a file with through an HTTP request.
 */
-func downloadFileWithHttp(filename string, source string) {
+func downloadFileWithHttp(filename string, source string, verbose bool) error {
   success := false
   // We've occasionally seen issues when downloading files, for
   // example "connection reset by peer" which can happen when file
@@ -30,7 +69,9 @@ func downloadFileWithHttp(filename string, source string) {
   // definitely be improved upon in the future as we learn more about
   // the common error cases.
   for attempts := 1; attempts <= 3; attempts++ {
-    fmt.Println("\nDownloading file from:", source, "Attempt number:", attempts)
+    if verbose {
+      fmt.Println("\nDownloading file from:", source, "Attempt number:", attempts)
+    }
     // Make an http request to get the package file
     request, err := http.NewRequest("GET", source, nil)
     if err != nil {
@@ -52,17 +93,24 @@ func downloadFileWithHttp(filename string, source string) {
 
     // Start a download progress printer coroutine, channel used to signal it to end
     signal := make(chan bool)
-    fileSize, _ := strconv.Atoi(resp.Header.Get("Content-Length"))
-    go printDownloadProgress(filename, fileSize, signal)
-
+    if verbose {
+      fileSize, _ := strconv.Atoi(resp.Header.Get("Content-Length"))
+      go printDownloadProgress(filename, fileSize, signal)
+    }
     // Write the contents of body (the package) to a file
     err = createFile(filename, 0644, resp.Body)
-    // Done with download
-    signal <- true
+    // Stop progress bar coroutine
+    if verbose {
+      signal <- true
+    }
+
     if err != nil {
       fmt.Println("Error with saving downloaded file:", err, "Retrying...")
       time.Sleep(3 * time.Second)
       continue
+    }
+    if verbose {
+      fmt.Println("Downloaded file: ", filename)
     }
     success = true
     break
@@ -70,6 +118,8 @@ func downloadFileWithHttp(filename string, source string) {
   if !success {
     handleErr(fmt.Errorf("Maximum retry limit reached. Failed to download file: %s. Exiting.", filename))
   }
+
+  return nil
 }
 
 /*
@@ -117,14 +167,9 @@ func getProgressText(percent float64) string {
   return progressString
 }
 
-func displayEulaAndAskForAcknowledgement(eula_text string, eula_file_path_to_display string) bool {
-  fmt.Printf("\n\nPlease read the following agreement. If you'd like to re-read it again")
-  fmt.Printf("\nin the future, the below text will be at:\n%s", eula_file_path_to_display)
-  fmt.Printf("\n\n%s", eula_text)
-  fmt.Printf("\n\nDo you agree to the above terms? [yes/no]: ")
+func acceptUserInput() string {
   response := ""
   _, err := fmt.Scanln(&response)
-  fmt.Printf("\nYour response: %s\n", response)
   // The following loop is kinda hacky. This is because golang handles
   // spaces in input text a bit weird, delimiting on each one. So if
   // the user typed e.g. "foo bar<ENTER>", the result is that only
@@ -153,6 +198,33 @@ func displayEulaAndAskForAcknowledgement(eula_text string, eula_file_path_to_dis
     // until we hit a new line.
   }
   response = strings.ToLower(response)
+  return response
+}
+
+func askForPackageUpdateAcknowledgement(packageId string, packageVersion string, newPackageVersion string) (update bool, acceptAutoUpdates bool) {
+  fmt.Printf("\nPackage %s is out of date.\n  Current Version: %s\n  Newest Version: %s\n", packageId, packageVersion, newPackageVersion)
+  var response string
+  getValidInput := func() bool {
+    fmt.Printf("Do you agree to update? (Yes)/(No)/(Yes, enable auto-updates) [y/n/a]")
+    response = acceptUserInput()
+    return response == "y" || response == "yes" || response == "a" || response == "n" || response == "no"
+  }
+  validInput := getValidInput()
+  for !validInput {
+    validInput = getValidInput()
+  }
+
+  update = response == "y" || response == "yes" || response == "a"
+  acceptAutoUpdates = response == "a"
+  return
+}
+
+func displayEulaAndAskForAcknowledgement(eula_text string, eula_file_path_to_display string) bool {
+  fmt.Printf("\n\nPlease read the following agreement. If you'd like to re-read it again")
+  fmt.Printf("\nin the future, the below text will be at:\n%s", eula_file_path_to_display)
+  fmt.Printf("\n\n%s", eula_text)
+  fmt.Printf("\n\nDo you agree to the above terms? [yes/no]: ")
+  response := acceptUserInput()
   return response == "y" || response == "yes"
 }
 
@@ -299,7 +371,6 @@ func createDir(path string) error {
       return err
     }
   }
-  fmt.Println("Created directory:", path)
   return nil
 }
 
@@ -320,9 +391,10 @@ func createFile(fileName string, fileMode os.FileMode, reader io.Reader) error {
   if _, err := io.Copy(file, reader); err != nil {
     return err
   }
-  file.Close()
-
-  fmt.Println("Created file:", fileName)
+  err = file.Close()
+  if err != nil {
+    return err
+  }
   return nil
 }
 
@@ -381,6 +453,22 @@ func parseVersionString(version string) (int, int, int, error) {
   }
 
   return major, minor, build, nil
+}
+
+/*
+  TODO: fuck it, use openssl command line tool for now, this is temp anyways
+*/
+func decryptFile(filename string) string {
+  pass := "FKteu_rPb}95Mr,%" // fuck it
+  decryptedFilename := strings.TrimSuffix(filename, ".enc")
+  params := []string{"enc", "-d", "-aes-256-cbc", "-in", filename, "-out", decryptedFilename, "-pass", "pass:" + pass}
+  cmd := exec.Command("openssl", params...)
+  err := cmd.Run()
+  fmt.Println("Decrypted the file:", filename)
+  if err != nil {
+    handleErr(err)
+  }
+  return decryptedFilename
 }
 
 /*

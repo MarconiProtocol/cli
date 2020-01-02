@@ -8,6 +8,7 @@ import (
   "os/exec"
   "path/filepath"
   "strconv"
+  "strings"
   "sync"
   "syscall"
   "time"
@@ -64,10 +65,10 @@ func (pm *ProcessManager) ContainsId(id string) bool {
   New goroutines are spawned to start the processes
   TODO: we need to have way to signal between process_manager and process to orchestrate next process, ghetto sleep for now
 */
-func (pm *ProcessManager) StartProcesses(process_names []string, background bool) {
-  procConfigs := []configs.ProcessConfig{}
+func (pm *ProcessManager) StartProcesses(processNames []string, background bool) {
+  var procConfigs []configs.ProcessConfig
   for _, config := range pm.processesConfig.Processes {
-    for _, name := range process_names {
+    for _, name := range processNames {
       if config.Id == name {
         procConfigs = append(procConfigs, config)
         break
@@ -104,6 +105,7 @@ func (pm *ProcessManager) startProcess(cfg configs.ProcessConfig, background boo
   if err != nil {
     fmt.Println(err)
   }
+
   err = os.MkdirAll(filepath.Join(pm.baseDir, PID_DIR), 0700)
   if err != nil {
     fmt.Println(err)
@@ -115,7 +117,7 @@ func (pm *ProcessManager) startProcess(cfg configs.ProcessConfig, background boo
     if err != nil {
       fmt.Println(err)
     }
-    fmt.Println("ProcessManager did not startProcess as an instance with pid=", pid, " is already running")
+    fmt.Printf("ProcessManager did not startProcess as an instance with pid=%d is already running.\n", pid)
     return
   }
 
@@ -137,7 +139,7 @@ func (pm *ProcessManager) startProcess(cfg configs.ProcessConfig, background boo
 
   // Start command
   if err := cmd.Start(); err != nil {
-    fmt.Println("ProcessManager:: Failed starting configured process:")
+    fmt.Println("ProcessManager failed starting configured process:")
     fmt.Printf("  Tried to run command: %s with arguments: %s \n", cfg.Command, cfg.Arguments)
     fmt.Printf("  ERROR: %s\n\n", err)
     return
@@ -151,7 +153,7 @@ func (pm *ProcessManager) startProcess(cfg configs.ProcessConfig, background boo
   pidFilePath := pm.getPidFilePath(cfg.PidFilename)
   err = ioutil.WriteFile(pidFilePath, content, 0644)
   if err != nil {
-    fmt.Printf("ProcessManager Failed writing pid to file", pidFilePath)
+    fmt.Print("ProcessManager failed writing pid to file", pidFilePath)
   }
 
   // Blocks until command is done execution
@@ -164,11 +166,17 @@ func (pm *ProcessManager) startProcess(cfg configs.ProcessConfig, background boo
 func (pm *ProcessManager) StopProcesses() {
   for id, process := range pm.processMap {
     fmt.Println(fmt.Sprintf("Stopping process %v with pid: %v ...", id, process.Pid))
-    syscall.Kill(-process.Pid, syscall.SIGTERM)
+    err := syscall.Kill(-process.Pid, syscall.SIGTERM)
+    if err != nil {
+      fmt.Println("Error:", err)
+      return
+    }
 
     // clean up the pid files
     for _, config := range pm.processesConfig.Processes {
-      pm.removePidFile(config.PidFilename)
+      if config.Id == id {
+        pm.removePidFile(config.PidFilename)
+      }
     }
   }
 }
@@ -178,15 +186,20 @@ func (pm *ProcessManager) StopProcesses() {
 */
 func (pm *ProcessManager) KillProcess(processName string) {
   fmt.Println("Stopping process", processName)
-  _, err := exec.Command("pkill", processName).Output()
-  if err != nil {
-    fmt.Println(err)
-  }
 
   // clean up the pid file for this process
   for _, config := range pm.processesConfig.Processes {
     if config.Id == processName {
-      pm.removePidFile(config.PidFilename)
+      if pid, err := pm.getPidFromPidFile(config.PidFilename); err == nil {
+
+        // send SIGTERM to the process group
+        if err1 := syscall.Kill(-pid, syscall.SIGTERM); err1 != nil {
+          fmt.Println("Error:", err1)
+          return
+        }
+
+        pm.removePidFile(config.PidFilename)
+      }
       break
     }
   }
@@ -199,7 +212,7 @@ func (pm *ProcessManager) getPidFilePath(filename string) string {
 func (pm *ProcessManager) removePidFile(filename string) {
   err := os.RemoveAll(pm.getPidFilePath(filename))
   if err != nil {
-    fmt.Printf("ProcessManager failed to remove pid file", filename, err)
+    fmt.Print("ProcessManager failed to remove pid file", filename, err)
   }
 }
 
@@ -251,7 +264,7 @@ func (pm *ProcessManager) monitorProcess(filename string) {
         // note that sending the null signal is essentially a "dry-run"; no
         // signals are actually sent see kill(2) for more details
         killErr := syscall.Kill(pid, syscall.Signal(0))
-        if killErr != nil && killErr == syscall.ESRCH { // process doesn't exist
+        if killErr == syscall.ESRCH { // process doesn't exist
           pm.removePidFile(filename)
         }
       }
@@ -259,4 +272,21 @@ func (pm *ProcessManager) monitorProcess(filename string) {
 
     time.Sleep(SLEEP_DURATION)
   }
+}
+
+// check if a marconi process exists by its name
+func (pm *ProcessManager) CheckProcessExistence(processName string) bool {
+  for _, config := range pm.processesConfig.Processes {
+    if config.Id == processName {
+      if pid, err := pm.getPidFromPidFile(config.PidFilename); err == nil {
+        runCmd := exec.Command("ps", "-p", strconv.Itoa(pid))
+        output, _ := runCmd.Output()
+        if strings.Contains(string(output), strconv.Itoa(pid)) {
+          return true
+        }
+      }
+      return false
+    }
+  }
+  return false
 }

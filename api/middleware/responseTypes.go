@@ -1,9 +1,10 @@
 package middleware
+
 /*
   Various RPC Response types
- */
+*/
 
- // JSON RPC Error Codes
+// JSON RPC Error Codes
 const (
   RpcErrorCode_ParseError     = -32700
   RpcErrorCode_InvalidRequest = -32600

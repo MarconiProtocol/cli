@@ -59,22 +59,22 @@ func hexStringToDecimalString(hexString string) string {
 // Given a RpcError object, return a human readable string message
 func parseRpcError(rpcError *RpcError) string {
   switch rpcError.Code {
-    case RpcErrorCode_ParseError:
-      return fmt.Sprintf("Parse Error: %s", rpcError.Message)
-    case RpcErrorCode_InvalidRequest:
-      return fmt.Sprintf("Invalid Request: %s", rpcError.Message)
-    case RpcErrorCode_MethodNotFound:
-      return fmt.Sprintf("Method Not Found: %s", rpcError.Message)
-    case RpcErrorCode_InvalidParams:
-      return fmt.Sprintf("Invalid Params: %s", rpcError.Message)
-    case RpcErrorCode_InternalError:
-      // special case for authentication error
-      const AuthenticationErrorMsg = "authentication"
-      if strings.Contains(rpcError.Message, AuthenticationErrorMsg) {
-        return "Please unlock your account first using credential mode"
-      }
-      return fmt.Sprintf("Server Internal Error: %s", rpcError.Message)
-    default:
-      return fmt.Sprintf("Code: %d, Message: %s", rpcError.Code, rpcError.Message)
+  case RpcErrorCode_ParseError:
+    return fmt.Sprintf("Parse Error: %s", rpcError.Message)
+  case RpcErrorCode_InvalidRequest:
+    return fmt.Sprintf("Invalid Request: %s", rpcError.Message)
+  case RpcErrorCode_MethodNotFound:
+    return fmt.Sprintf("Method Not Found: %s", rpcError.Message)
+  case RpcErrorCode_InvalidParams:
+    return fmt.Sprintf("Invalid Params: %s", rpcError.Message)
+  case RpcErrorCode_InternalError:
+    // special case for authentication error
+    const AuthenticationErrorMsg = "authentication"
+    if strings.Contains(rpcError.Message, AuthenticationErrorMsg) {
+      return "Please unlock your account first using credential mode"
+    }
+    return fmt.Sprintf("Server Internal Error: %s", rpcError.Message)
+  default:
+    return fmt.Sprintf("Code: %d, Message: %s", rpcError.Code, rpcError.Message)
   }
 }

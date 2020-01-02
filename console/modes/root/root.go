@@ -1,9 +1,9 @@
 package root
 
 import (
-  "github.com/MarconiProtocol/go-prompt"
   "github.com/MarconiProtocol/cli/console/context"
   "github.com/MarconiProtocol/cli/console/modes"
+  "github.com/MarconiProtocol/go-prompt"
 )
 
 const (
@@ -41,6 +41,10 @@ func NewRootMode(c *context.Context) *RootMode {
 
 func (rm *RootMode) Name() string {
   return "home"
+}
+
+func (rm *RootMode) HandleCommand(args []string) {
+  // NO-OP
 }
 
 /*

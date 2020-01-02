@@ -1,5 +1,6 @@
 {
   "Version": "0.0.1",
   "MarconiNodeHost": "http://127.0.0.1",
-  "MarconiNodePort": "28902"
+  "MarconiNodePort": "28902",
+  "MarconidRPCPort": "24802"
 }

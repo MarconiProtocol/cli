@@ -1,28 +1,26 @@
 package process
 
 import (
-  "github.com/MarconiProtocol/go-prompt"
+  "fmt"
   "github.com/MarconiProtocol/cli/console/context"
   "github.com/MarconiProtocol/cli/console/modes"
+  "github.com/MarconiProtocol/cli/console/modes/process/commands"
   "github.com/MarconiProtocol/cli/console/util"
   "github.com/MarconiProtocol/cli/core/processes"
-  "fmt"
-  "strconv"
+  "github.com/MarconiProtocol/go-prompt"
 )
 
-const (
-  START = "start"
-  STOP = "stop"
-  RESTART = "restart"
-  LIST = "list"
-)
+// Name of Mode
+const NAME = "process"
 
 // Mode suggestions
 var PROCESS_SUGGESTIONS = []prompt.Suggest{
-  {Text: START, Description: "Start a process and manage its lifetime."},
-  {Text: STOP, Description: "Stop a managed process."},
-  {Text: RESTART, Description: "Restart a managed process."},
-  {Text: LIST, Description: "List running processes."},
+  {Text: process_commands.START, Description: "Start a process and manage its lifetime."},
+  {Text: process_commands.STOP, Description: "Stop a managed process."},
+  {Text: process_commands.RESTART, Description: "Restart a managed process."},
+  {Text: process_commands.LIST, Description: "List running processes."},
+  {Text: process_commands.VERSION, Description: "Show version of each component."},
+  {Text: process_commands.UTIL, Description: "Utility commands"},
   {Text: modes.RETURN_TO_ROOT, Description: "Return to home menu"},
   {Text: modes.EXIT_CMD, Description: "Exit mcli"},
 }
@@ -44,10 +42,13 @@ func NewProcessMode(c *context.Context) *ProcessMode {
   processMode.SetBaseSuggestions(PROCESS_SUGGESTIONS)
 
   // suggestion and handler registrations
-  processMode.RegisterCommand(START, processMode.getSuggestions, processMode.handleStart)
-  processMode.RegisterCommand(STOP, processMode.getSuggestions, processMode.handleStop)
-  processMode.RegisterCommand(RESTART, processMode.getSuggestions, processMode.handleRestart)
-  processMode.RegisterCommand(LIST, processMode.GetEmptySuggestions, processMode.handleList)
+  processMode.RegisterCommand(process_commands.START, processMode.getSuggestions, processMode.handleStart)
+  processMode.RegisterCommand(process_commands.STOP, processMode.getSuggestions, processMode.handleStop)
+  processMode.RegisterCommand(process_commands.RESTART, processMode.getSuggestions, processMode.handleRestart)
+  processMode.RegisterCommand(process_commands.LIST, processMode.GetEmptySuggestions, processMode.handleList)
+  processMode.RegisterCommand(process_commands.VERSION, processMode.GetEmptySuggestions, processMode.handleVersion)
+  processMode.RegisterCommand(process_commands.UTIL, processMode.getUtilSuggestions, processMode.handleUtil)
+  processMode.RegisterSubCommand(process_commands.UTIL, process_commands.RESET, processMode.getRestSuggestions, processMode.handleReset)
 
   processMode.RegisterCommand(modes.RETURN_TO_ROOT, processMode.GetEmptySuggestions, processMode.HandleReturnToRoot)
   processMode.RegisterCommand(modes.EXIT_CMD, processMode.GetEmptySuggestions, processMode.HandleExitCommand)
@@ -60,7 +61,21 @@ func (pm *ProcessMode) CliPrefix() (string, bool) {
 }
 
 func (pm *ProcessMode) Name() string {
-  return "process"
+  return NAME
+}
+
+func (pm *ProcessMode) HandleCommand(args []string) {
+  if !modes.ArgsMinLenCheck(args, 1) {
+    fmt.Println("USAGE:  <command>")
+    return
+  }
+  commandType := args[0]
+  commandArgs := args[1:]
+  if commandHandlerFunction, present := process_commands.COMMAND_MAP[commandType]; present {
+    commandHandlerFunction(commandArgs)
+  } else {
+    fmt.Println("Invalid command " + commandType)
+  }
 }
 
 func (pm *ProcessMode) getSuggestions(line []string) []prompt.Suggest {
@@ -74,65 +89,38 @@ func (pm *ProcessMode) getSuggestions(line []string) []prompt.Suggest {
   return util.SimpleSubcommandCompleter(line, 1, suggestions)
 }
 
-func (pm *ProcessMode) parseArgs(args []string) (string, []string, bool) {
-  if len(args) <= 0 {
-    fmt.Println("No process argument provided")
-    return "", nil, false
-  }
-
-  program := args[0]
-  parsedArgs := args[1:]
-
-  if !processes.Instance().ContainsId(program) {
-    fmt.Println("Unrecognized process argument:", program)
-    return "", nil, false
-  }
-
-  return program, parsedArgs, true
+/*
+  Show prompt suggestions for entering the util sub menu
+*/
+func (pm *ProcessMode) getUtilSuggestions(line []string) []prompt.Suggest {
+  return util.SimpleSubcommandCompleter(line, 1, PROCESS_UTIL_SUGGESTIONS)
 }
 
 func (pm *ProcessMode) handleStart(args []string) {
-  program, parsedArgs, exists := pm.parseArgs(args)
-  if !exists {
-    return
-  }
-
-  background := false
-  if len(parsedArgs) == 1 {
-    background, _ = strconv.ParseBool(parsedArgs[0])
-  }
-  processes.Instance().StartProcesses([]string{program}, background)
+  util.Logger.Info(process_commands.START, util.ArgsToString(args))
+  process_commands.StartProcesses(args)
 }
 
 func (pm *ProcessMode) handleStop(args []string) {
-  program, _, exists := pm.parseArgs(args)
-  if !exists {
-    return
-  }
-
-  processes.Instance().KillProcess(program)
+  util.Logger.Info(process_commands.STOP, util.ArgsToString(args))
+  process_commands.StopProcess(args)
 }
 
 func (pm *ProcessMode) handleRestart(args []string) {
-  program, _, exists := pm.parseArgs(args)
-  if !exists {
-    return
-  }
-
-  pm.handleStop([]string{program})
-  pm.handleStart(args)
+  util.Logger.Info(process_commands.RESTART, util.ArgsToString(args))
+  process_commands.RestartProcess(args)
 }
 
 func (pm *ProcessMode) handleList(args []string) {
-  statuses := processes.Instance().GetProcessRunningMap()
-  for _, processConfig := range processes.Instance().GetSortedProcessConfigs() {
-    var runString string
-    if statuses[processConfig.Id] {
-      runString = "RUNNING"
-    } else {
-      runString = "STOPPED"
-    }
+  util.Logger.Info(process_commands.LIST, util.ArgsToString(args))
+  process_commands.ListProcesses(args)
+}
 
-    fmt.Printf("%-15s %s\n", processConfig.Id, runString)
-  }
+func (pm *ProcessMode) handleVersion(args []string) {
+  util.Logger.Info(process_commands.VERSION, util.ArgsToString(args))
+  process_commands.ListProcessVersions(args)
+}
+
+func (pm *ProcessMode) handleUtil(args []string) {
+  util.HandleFurtherCommands(process_commands.UTIL, PROCESS_UTIL_SUGGESTIONS)
 }

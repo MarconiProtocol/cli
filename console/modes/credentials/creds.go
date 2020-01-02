@@ -2,23 +2,22 @@ package credentials
 
 import (
   "fmt"
-
-  "github.com/MarconiProtocol/go-prompt"
   "github.com/MarconiProtocol/cli/api/middleware"
   "github.com/MarconiProtocol/cli/console/context"
   "github.com/MarconiProtocol/cli/console/modes"
+  "github.com/MarconiProtocol/cli/console/modes/credentials/commands"
   "github.com/MarconiProtocol/cli/console/util"
+  "github.com/MarconiProtocol/go-prompt"
 )
 
 const (
-  ACCOUNT = "account"
-  KEY     = "key"
+  NAME = "credential"
 )
 
 // Mode suggestions
 var METH_SUGGESTIONS = []prompt.Suggest{
-  {Text: ACCOUNT, Description: "Account related commands"},
-  {Text: KEY, Description: "Key related commands"},
+  {Text: credential_commands.ACCOUNT, Description: "Account related commands"},
+  {Text: credential_commands.KEY, Description: "Key related commands"},
   {Text: modes.RETURN_TO_ROOT, Description: "Return to home menu"},
   {Text: modes.EXIT_CMD, Description: "Exit mcli"},
 }
@@ -41,22 +40,23 @@ func NewCredsMode(c *context.Context) *CredsMode {
   credsMode.SetBaseSuggestions(METH_SUGGESTIONS)
 
   // suggestion and handler registrations
-  credsMode.RegisterCommand(ACCOUNT, credsMode.getAccountSuggestions, credsMode.handleAccountSubMode)
-  credsMode.RegisterCommand(KEY, credsMode.getKeySuggestions, credsMode.handleKeySubMode)
+  credsMode.RegisterCommand(credential_commands.ACCOUNT, credsMode.getAccountSuggestions, credsMode.handleAccountSubMode)
+  credsMode.RegisterCommand(credential_commands.KEY, credsMode.getKeySuggestions, credsMode.handleKeySubMode)
 
   // suggestion and handler registrations
-  credsMode.RegisterSubCommand(ACCOUNT, UNLOCK_ACCOUNT, credsMode.getUnlockAccountSuggestions, credsMode.handleUnlockAccount)
-  credsMode.RegisterSubCommand(ACCOUNT, CREATE_ACCOUNT, credsMode.getCreateAccountSuggestions, credsMode.handleCreateAccount)
-  credsMode.RegisterSubCommand(ACCOUNT, LIST_ACCOUNTS, credsMode.getListAccountSuggestions, credsMode.handleListAccounts)
-  credsMode.RegisterSubCommand(ACCOUNT, GET_BALANCE, credsMode.getGetBalanceSuggestions, credsMode.handleGetBalance)
-  credsMode.RegisterSubCommand(ACCOUNT, SEND_TRANSACTION, credsMode.getSendTransactionSuggestions, credsMode.handleSendTransaction)
-  credsMode.RegisterSubCommand(ACCOUNT, GET_TRANSACTION_RECEIPT, credsMode.getGetTransactionReceiptSuggestions, credsMode.handleGetTransactionReceipt)
-  credsMode.RegisterSubCommand(ACCOUNT, EXPORT_GMRC_KEY, credsMode.getExportGMrcKeySuggestions, credsMode.handleExportGMrcKey)
+  credsMode.RegisterSubCommand(credential_commands.ACCOUNT, credential_commands.UNLOCK_ACCOUNT, credsMode.getUnlockAccountSuggestions, credsMode.handleUnlockAccount)
+  credsMode.RegisterSubCommand(credential_commands.ACCOUNT, credential_commands.CREATE_ACCOUNT, credsMode.getCreateAccountSuggestions, credsMode.handleCreateAccount)
+  credsMode.RegisterSubCommand(credential_commands.ACCOUNT, credential_commands.LIST_ACCOUNTS, credsMode.getListAccountSuggestions, credsMode.handleListAccounts)
+  credsMode.RegisterSubCommand(credential_commands.ACCOUNT, credential_commands.GET_BALANCE, credsMode.getGetBalanceSuggestions, credsMode.handleGetBalance)
+  credsMode.RegisterSubCommand(credential_commands.ACCOUNT, credential_commands.SEND_TRANSACTION, credsMode.getSendTransactionSuggestions, credsMode.handleSendTransaction)
+  credsMode.RegisterSubCommand(credential_commands.ACCOUNT, credential_commands.GET_TRANSACTION_RECEIPT, credsMode.getGetTransactionReceiptSuggestions, credsMode.handleGetTransactionReceipt)
+  credsMode.RegisterSubCommand(credential_commands.ACCOUNT, credential_commands.EXPORT_GMRC_KEY, credsMode.getExportGMrcKeySuggestions, credsMode.handleExportGMrcKey)
+  credsMode.RegisterSubCommand(credential_commands.ACCOUNT, credential_commands.USE_ACCOUNT, credsMode.getUseUserAddressSuggestions, credsMode.handleUseUserAddress)
 
-  credsMode.RegisterSubCommand(KEY, GENERATE_MP_KEY, credsMode.getGenerateMPKeySuggestions, credsMode.handleGenerateMPKey)
-  credsMode.RegisterSubCommand(KEY, USE_MPKEY, credsMode.getUseMpkKeySuggestions, credsMode.handleUseMPKey)
-  credsMode.RegisterSubCommand(KEY, EXPORT_MP_KEY, credsMode.getExportMPKeySuggestions, credsMode.handleExportMPKey)
-  credsMode.RegisterSubCommand(KEY, LIST_MPKEY_HASHES, credsMode.getListMpkKeyHashesSuggestions, credsMode.handleListMPKeyHashes)
+  credsMode.RegisterSubCommand(credential_commands.KEY, credential_commands.GENERATE_MP_KEY, credsMode.getGenerateMPKeySuggestions, credsMode.handleGenerateMPKey)
+  credsMode.RegisterSubCommand(credential_commands.KEY, credential_commands.USE_MPKEY, credsMode.getUseMpkKeySuggestions, credsMode.handleUseMPKey)
+  credsMode.RegisterSubCommand(credential_commands.KEY, credential_commands.EXPORT_MP_KEY, credsMode.getExportMPKeySuggestions, credsMode.handleExportMPKey)
+  credsMode.RegisterSubCommand(credential_commands.KEY, credential_commands.LIST_MPKEY_HASHES, credsMode.getListMpkKeyHashesSuggestions, credsMode.handleListMPKeyHashes)
 
   credsMode.RegisterCommand(modes.RETURN_TO_ROOT, credsMode.GetEmptySuggestions, credsMode.HandleReturnToRoot)
   credsMode.RegisterCommand(modes.EXIT_CMD, credsMode.GetEmptySuggestions, credsMode.HandleExitCommand)
@@ -71,7 +71,21 @@ func (mm *CredsMode) CliPrefix() (string, bool) {
 }
 
 func (mm *CredsMode) Name() string {
-  return "credential"
+  return NAME
+}
+
+func (mm *CredsMode) HandleCommand(args []string) {
+  if !modes.ArgsMinLenCheck(args, 2) {
+    fmt.Println("USAGE: [account | key] <command>")
+    return
+  }
+  commandType := args[0]
+  commandArgs := args[1:]
+  if commandHandlerFunction, present := credential_commands.COMMAND_MAP[commandType]; present {
+    commandHandlerFunction(commandArgs)
+  } else {
+    fmt.Println("Invalid command " + commandType)
+  }
 }
 
 /*
@@ -137,31 +151,12 @@ func (mm *CredsMode) getGetTransactionReceiptSuggestions(line []string) []prompt
   Handle the account sub menu command
 */
 func (mm *CredsMode) handleAccountSubMode(args []string) {
-  util.HandleFurtherCommands(ACCOUNT, METH_ACCOUNT_SUGGESTIONS)
+  util.HandleFurtherCommands(credential_commands.ACCOUNT, METH_ACCOUNT_SUGGESTIONS)
 }
 
 /*
   Handle the key sub menu command
 */
 func (mm *CredsMode) handleKeySubMode(args []string) {
-  util.HandleFurtherCommands(KEY, METH_KEY_SUGGESTIONS)
-}
-
-func getPassword(outputPrompt string) (string, bool) {
-  fmt.Print(outputPrompt, ": ")
-
-  earlyExit := make(chan struct{}, 1)
-  cancelled := false
-
-  cancel := func(*prompt.Buffer) {
-    cancelled = true
-    earlyExit <- struct{}{}
-  }
-
-  password := prompt.Input("", modes.PasswordCompleter,
-    prompt.OptionHiddenInput(),
-    prompt.OptionAddKeyBind(prompt.KeyBind{Key: prompt.ControlC, Fn: cancel}),
-    prompt.OptionSetEarlyExit(earlyExit))
-
-  return password, cancelled
+  util.HandleFurtherCommands(credential_commands.KEY, METH_KEY_SUGGESTIONS)
 }

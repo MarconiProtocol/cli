@@ -1,7 +1,9 @@
 package util
 
 import (
+  "github.com/MarconiProtocol/cli/console/execution/execution_flags"
   "github.com/MarconiProtocol/go-prompt"
+  mlog "github.com/MarconiProtocol/log"
   "golang.org/x/crypto/sha3"
 
   "fmt"
@@ -10,10 +12,12 @@ import (
 )
 
 const (
-  ADDRESS_PREFIX = "0x"
+  ADDRESS_PREFIX     = "0x"
   TRANSACTION_PREFIX = "0x"
-  PUB_KEY_PREFIX = "Nx"
+  PUB_KEY_PREFIX     = "Nx"
 )
+
+var Logger *mlog.Mlog // log commands submitted by users
 
 func SplitInput(input string, keepLastElement bool) []string {
   inputSlice := strings.Split(input, " ")
@@ -28,7 +32,7 @@ func SplitInput(input string, keepLastElement bool) []string {
     // completions from the next word, instead of trying to complete the
     // current word
     if e != "" ||
-      (keepLastElement && i == len(inputSlice) - 1) {
+      (keepLastElement && i == len(inputSlice)-1) {
 
       inputSliceView = append(inputSliceView, e)
     }
@@ -37,7 +41,7 @@ func SplitInput(input string, keepLastElement bool) []string {
 }
 
 func SimpleSubcommandCompleter(line []string, index int, suggestions []prompt.Suggest) []prompt.Suggest {
-  if len(line) != index + 1 {
+  if len(line) != index+1 {
     return []prompt.Suggest{}
   }
   return prompt.FilterHasPrefix(suggestions, line[index], true)
@@ -49,6 +53,16 @@ func getEIP55Case(r rune, n byte) rune {
   } else {
     return unicode.ToLower(r)
   }
+}
+
+// Looks for a specific value in the array, and returns its location returns -1 if not found
+func FindIndexOfValueInArray(arr []string, value string) int {
+  for index, a := range arr {
+    if a == value {
+      return index
+    }
+  }
+  return -1 // If nothing is found, return -1
 }
 
 func GetEIP55Address(address string) string {
@@ -66,7 +80,7 @@ func GetEIP55Address(address string) string {
   for i, c := range unprefixed {
     nybble := hashed[i/2]
 
-    if i % 2 == 0 {
+    if i%2 == 0 {
       nybble >>= 4
     } else {
       nybble &= 0x0f
@@ -82,5 +96,29 @@ func HandleFurtherCommands(command string, suggestions []prompt.Suggest) {
   fmt.Println("Usage:", command, "has further commands")
   for _, c := range suggestions {
     fmt.Printf("    %-32s : %-32s\n", c.Text, c.Description)
+  }
+}
+
+// Removes the password
+func scrubArgs(args []string) []string {
+  passwordFlagIndex := FindIndexOfValueInArray(args, execution_flags.PASSWORD)
+  scrubbedArgs := make([]string, len(args))
+  copy(scrubbedArgs, args)
+  if passwordFlagIndex != -1 {
+    if passwordFlagIndex+1 < len(args) {
+      return append(scrubbedArgs[:passwordFlagIndex], scrubbedArgs[passwordFlagIndex+2:]...)
+    }
+    return append(scrubbedArgs[:passwordFlagIndex], scrubbedArgs[passwordFlagIndex+1:]...)
+  }
+  return args
+}
+
+func ArgsToString(args []string) string {
+  scrubbedArgs := scrubArgs(args)
+  str := strings.Join(scrubbedArgs, " ")
+  if str == "" {
+    return str
+  } else {
+    return " " + str
   }
 }

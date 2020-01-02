@@ -1,25 +1,31 @@
 package configs
 
-// Main config - more of a placeholder for now, maybe include modes settings?
 type BaseConfig struct {
   Version         string
   MarconiNodeHost string
   MarconiNodePort string
+  MarconidRPCPort string
 }
 
 // Config for packages to be downloaded
 type PackagesConfig struct {
-  Version  string
-  Packages []PackageConfig
+  Version           string
+  AutoUpdateEnabled bool
+  Packages          []PackageConfig
 }
 
 type PackageConfig struct {
   Id          string
   Dir         string
-  Source      string
-  Version     string
   VersionFile string
   IsEncrypted bool
+  Manifest    string
+}
+
+type PackageManifest struct {
+  Version  string
+  Source   string
+  Checksum string
 }
 
 // Config for an individual process to be started with the process manager

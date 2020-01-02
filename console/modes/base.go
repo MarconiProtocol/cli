@@ -2,10 +2,10 @@ package modes
 
 import (
   "fmt"
-  "github.com/MarconiProtocol/go-prompt"
   "github.com/MarconiProtocol/cli/console/context"
-  "github.com/MarconiProtocol/cli/console/util"
   "github.com/MarconiProtocol/cli/console/mode_interface"
+  "github.com/MarconiProtocol/cli/console/util"
+  "github.com/MarconiProtocol/go-prompt"
   "strings"
 )
 
@@ -120,6 +120,8 @@ func (bm *BaseMode) GetEmptySuggestions(line []string) []prompt.Suggest {
   Triggers the mcli to exit by passing back a nil instead of a valid cmd
 */
 func (bm *BaseMode) HandleExitCommand(args []string) {
+  util.Logger.Info(EXIT_CMD, util.ArgsToString(args))
+
   bm.contxt.Exit()
 }
 
@@ -127,6 +129,8 @@ func (bm *BaseMode) HandleExitCommand(args []string) {
   Updates the context's active mode based on the args provided
 */
 func (bm *BaseMode) HandleJumpCommand(args []string) {
+  util.Logger.Info(JUMP_CMD, util.ArgsToString(args))
+
   if !ArgsLenCheck(args, 1) {
     fmt.Println("Usage:", JUMP_CMD, "<mode_name>")
     return
@@ -141,8 +145,10 @@ func (bm *BaseMode) HandleJumpCommand(args []string) {
 
 /*
   Jumps to the root mode
- */
+*/
 func (bm *BaseMode) HandleReturnToRoot(args []string) {
+  util.Logger.Info(RETURN_TO_ROOT, util.ArgsToString(args))
+
   bm.HandleJumpCommand([]string{"home"})
 }
 

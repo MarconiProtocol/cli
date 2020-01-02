@@ -34,7 +34,7 @@
       "Source": "",
       "Version": "",
       "Command": "./marconid",
-      "Arguments": ["/opt/marconi/etc/marconid/l2.key", "/opt/marconi/etc/marconid/block/basebeacon_cluster1"],
+      "Arguments": ["--l2key", "/opt/marconi/etc/marconid/l2.key", "--baseroutekey", "/opt/marconi/etc/marconid/block/basebeacon_cluster1", "--basedir", "/opt/marconi"],
       "LogFilename": "marconid.log",
       "WaitForCompletion": false,
       "WaitTime": 1,

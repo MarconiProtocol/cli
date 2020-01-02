@@ -16,4 +16,6 @@ type Mode interface {
   CliPrefix() (string, bool)
   // The name of the mode, will be used as the string in mode change commands
   Name() string
+  // Handle the command (this is so the mode can be used with exec mode)
+  HandleCommand(args []string)
 }

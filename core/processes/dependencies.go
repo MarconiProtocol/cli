@@ -18,7 +18,7 @@ type Node struct {
 }
 
 func (g *Graph) getOrderedProcessConfigs() []configs.ProcessConfig {
-  procConfigs := []configs.ProcessConfig{}
+  var procConfigs []configs.ProcessConfig
   for _, node := range g.SortedNodes {
     procConfigs = append(procConfigs, node.ProcessConfig)
   }
@@ -42,7 +42,7 @@ func buildDependencyGraph(processes []configs.ProcessConfig) *Graph {
 }
 
 // dfs visit
-func (graph *Graph) visit(n *Node) {
+func (g *Graph) visit(n *Node) {
   if n.done {
     return
   }
@@ -54,22 +54,22 @@ func (graph *Graph) visit(n *Node) {
   // Look to see if we have any other dependencies
   n.visited = true
   for _, dependencyId := range n.ProcessConfig.Dependencies {
-    if d, exists := graph.NodesMap[dependencyId]; exists {
+    if d, exists := g.NodesMap[dependencyId]; exists {
       // Visit dependencies
-      graph.visit(d)
+      g.visit(d)
     }
   }
   n.done = true
 
   // Add node to sorted dependency nodes list
-  graph.SortedNodes = append(graph.SortedNodes, n)
+  g.SortedNodes = append(g.SortedNodes, n)
 }
 
 // parses ProcessConfigs into Node objects for use in a dependency graph
-func (graph *Graph) buildDependencyNodesMap(processes []configs.ProcessConfig) {
-  graph.NodesMap = make(map[string]*Node)
+func (g *Graph) buildDependencyNodesMap(processes []configs.ProcessConfig) {
+  g.NodesMap = make(map[string]*Node)
   for _, procConfig := range processes {
-    graph.NodesMap[procConfig.Id] = &Node{
+    g.NodesMap[procConfig.Id] = &Node{
       procConfig,
       false,
       false,

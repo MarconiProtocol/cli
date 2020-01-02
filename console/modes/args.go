@@ -17,8 +17,16 @@ func ArgsLenCheck(args []string, requiredLen int) bool {
   return len(args) == requiredLen
 }
 
+func ArgsMinLenCheck(args []string, minimumLen int) bool {
+  return len(args) >= minimumLen
+}
+
 func ArgsLenCheckWithOptional(args []string, requiredLen int, optionalLen int) bool {
   return len(args) == requiredLen || len(args) == (requiredLen+optionalLen)
+}
+
+func ArgsLenCheckWithOptionalRange(args []string, requiredLen int, optionalLenLower int, optionalLenHigher int) bool {
+  return len(args) == requiredLen || (len(args) >= (requiredLen+optionalLenLower) && len(args) <= (requiredLen+optionalLenHigher))
 }
 
 func eip55AddressCheck(arg string) bool {

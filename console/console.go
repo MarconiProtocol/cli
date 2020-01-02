@@ -3,13 +3,13 @@ package console
 import (
   "bufio"
   "fmt"
-  "github.com/MarconiProtocol/go-prompt"
   "github.com/MarconiProtocol/cli/console/context"
-  "github.com/MarconiProtocol/cli/console/util"
   "github.com/MarconiProtocol/cli/console/modes/credentials"
   "github.com/MarconiProtocol/cli/console/modes/marconi_net"
   "github.com/MarconiProtocol/cli/console/modes/process"
   "github.com/MarconiProtocol/cli/console/modes/root"
+  "github.com/MarconiProtocol/cli/console/util"
+  "github.com/MarconiProtocol/go-prompt"
   "io"
   "os"
   "strings"
@@ -20,28 +20,27 @@ const (
   PROMPT_SUFFIX = "> "
 )
 
-type Exit struct {}
+type Exit struct{}
 
 var contxt *context.Context
 
 func dummyExecutor(in string) { return }
 
 // Initialization function for this package called by golang runtime
-func init() {
+func Init() {
   initializeContext()
 }
 
 /*
   Simple REPL that loops until the user exits
 */
-func LaunchREPL(sig *chan Exit, runConsole bool, readCommandsFromStdin bool) {
+func LaunchREPL(sig chan Exit, runConsole bool, readCommandsFromStdin bool) {
 
   // Grab input commands from stdin if required
   var inputs_from_stdin []string
   if readCommandsFromStdin {
     inputs_from_stdin = readInputFromStdin()
   }
-
   // Set the current mode to home
   currentMode, _ := contxt.SelectMode("home")
   var prompt *prompt.Prompt = nil
@@ -80,7 +79,7 @@ func LaunchREPL(sig *chan Exit, runConsole bool, readCommandsFromStdin bool) {
     // Check for the current command after handling the input
     newMode, _ := contxt.GetCurrentMode()
     if newMode == nil {
-      *sig <- Exit{}
+      sig <- Exit{}
       break
     } else if newMode != currentMode {
       currentMode = newMode
@@ -152,7 +151,7 @@ func getPrompt(completer func(d prompt.Document) []prompt.Suggest, cliPrefixFunc
     prompt.OptionLivePrefix(cliPrefixFuncAppended),
     prompt.OptionPrefix(prefix),
     prompt.OptionPrefixTextColor(prompt.Blue),
-    prompt.OptionInputTextColor(prompt.White),
+    prompt.OptionInputTextColor(prompt.DefaultColor),
     prompt.OptionPreviewSuggestionTextColor(prompt.Black),
     prompt.OptionPreviewSuggestionBGColor(prompt.White),
     prompt.OptionSuggestionTextColor(prompt.White),
